@@ -14,7 +14,9 @@ class Maze:
         self.height = height
         self.grid = [[PATH for _ in range(width)] for _ in range(height)]
         self.entrance = (1, 0)
-        self.exit = (width - 2, height - 1)
+        # Ensure exit is on an odd coordinate (where paths can exist)
+        exit_x = (width - 3) if (width % 2 == 0) else (width - 2)
+        self.exit = (exit_x, height - 1)
 
 
 class MazeGenerator:
@@ -265,12 +267,12 @@ def main():
                        help='Show solution path')
     parser.add_argument('--width',
                        type=int,
-                       default=20,
-                       help='Maze width (min: 3, default: 20)')
+                       default=15,
+                       help='Maze width (min: 3, default: 15)')
     parser.add_argument('--height',
                        type=int,
-                       default=20,
-                       help='Maze height (min: 3, default: 20)')
+                       default=15,
+                       help='Maze height (min: 3, default: 15)')
     
     args = parser.parse_args()
     
