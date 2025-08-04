@@ -1,7 +1,9 @@
-# maze [-g|--generator kruskal|prim|rbt] [-s|--solve] [--width N] [--height N] - Generate and solve mazes using various algorithms
+# maze [-g|--generator kruskal|prim|rbt] [-s|--solve] [--animate] [--width N] [--height N] - Generate and solve mazes using various algorithms
 
 import random
 import argparse
+import time
+import sys
 
 WALL = 0
 PATH = 1
@@ -265,6 +267,9 @@ def main():
     parser.add_argument('-s', '--solve', 
                        action='store_true',
                        help='Show solution path')
+    parser.add_argument('--animate',
+                       action='store_true',
+                       help='Animate maze generation (default: false)')
     parser.add_argument('--width',
                        type=int,
                        default=15,
@@ -290,14 +295,39 @@ def main():
     else:  # rbt
         generator = RecursiveBacktrackingGenerator()
     
-    maze = generator.generate(args.width, args.height)
-    
-    if args.solve:
-        solver = MazeSolver()
-        solved_maze = solver.solve(maze)
-        renderer.render(solved_maze)
+    if args.animate:
+        # Hide cursor and prepare for animation
+        sys.stdout.write('\033[?25l')
+        sys.stdout.flush()
+        
+        try:
+            for maze_state in generator.igenerate(args.width, args.height):
+                # Clear screen and move cursor to top
+                sys.stdout.write('\033[2J\033[H')
+                renderer.render(maze_state)
+                sys.stdout.flush()
+                time.sleep(0.05)
+            
+            # Show solution if requested
+            if args.solve:
+                solver = MazeSolver()
+                solved_maze = solver.solve(maze_state)
+                sys.stdout.write('\033[2J\033[H')
+                renderer.render(solved_maze)
+                sys.stdout.flush()
+        finally:
+            # Restore cursor
+            sys.stdout.write('\033[?25h')
+            sys.stdout.flush()
     else:
-        renderer.render(maze)
+        maze = generator.generate(args.width, args.height)
+        
+        if args.solve:
+            solver = MazeSolver()
+            solved_maze = solver.solve(maze)
+            renderer.render(solved_maze)
+        else:
+            renderer.render(maze)
 
 
 if __name__ == "__main__":
