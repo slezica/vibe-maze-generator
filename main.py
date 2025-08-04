@@ -1,4 +1,3 @@
-# Maze generator, vibe coded with Claude. This is the only hand-written line.
 # maze [-g|--generator kruskal|prim|rbt] [-s|--solve] - Generate and solve mazes using various algorithms
 
 import random
