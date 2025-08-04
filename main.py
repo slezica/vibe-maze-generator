@@ -19,11 +19,15 @@ class Maze:
 
 class MazeGenerator:
     def generate(self, width, height):
+        *_, final_maze = self.igenerate(width, height)
+        return final_maze
+    
+    def igenerate(self, width, height):
         maze = Maze(width, height)
         self._add_fence(maze)
-        self.generate_inner(maze, 1, 1, maze.width - 2, maze.height - 2)
+        yield from self.generate_inner(maze, 1, 1, maze.width - 2, maze.height - 2)
         self._ensure_entrance_exit(maze)
-        return maze
+        yield maze
     
     def generate_inner(self, maze, min_x, min_y, max_x, max_y):
         raise NotImplementedError("Subclasses must implement generate_inner method")
@@ -67,10 +71,11 @@ class RecursiveBacktrackingGenerator(MazeGenerator):
             for x in range(min_x, max_x + 1):
                 maze.grid[y][x] = WALL
         
-        self._carve_path(maze, min_x, min_y, min_x, min_y, max_x, max_y)
+        yield from self._carve_path(maze, min_x, min_y, min_x, min_y, max_x, max_y)
     
     def _carve_path(self, maze, x, y, min_x, min_y, max_x, max_y):
         maze.grid[y][x] = PATH
+        yield maze
         
         directions = [(0, 2), (2, 0), (0, -2), (-2, 0)]
         random.shuffle(directions)
@@ -80,7 +85,8 @@ class RecursiveBacktrackingGenerator(MazeGenerator):
             if (min_x <= nx <= max_x and min_y <= ny <= max_y and 
                 maze.grid[ny][nx] == WALL):
                 maze.grid[y + dy // 2][x + dx // 2] = PATH
-                self._carve_path(maze, nx, ny, min_x, min_y, max_x, max_y)
+                yield maze
+                yield from self._carve_path(maze, nx, ny, min_x, min_y, max_x, max_y)
 
 
 class KruskalGenerator(MazeGenerator):
@@ -94,6 +100,8 @@ class KruskalGenerator(MazeGenerator):
             for x in range(min_x, max_x + 1, 2):
                 cells.append((x, y))
                 maze.grid[y][x] = PATH
+        
+        yield maze
         
         parent = {}
         for cell in cells:
@@ -125,6 +133,7 @@ class KruskalGenerator(MazeGenerator):
             if union((x1, y1), (x2, y2)):
                 wall_x, wall_y = (x1 + x2) // 2, (y1 + y2) // 2
                 maze.grid[wall_y][wall_x] = PATH
+                yield maze
 
 
 class PrimGenerator(MazeGenerator):
@@ -135,6 +144,7 @@ class PrimGenerator(MazeGenerator):
         
         start_x, start_y = min_x, min_y
         maze.grid[start_y][start_x] = PATH
+        yield maze
         
         frontier = []
         for dx, dy in [(0, 2), (2, 0), (0, -2), (-2, 0)]:
@@ -149,6 +159,7 @@ class PrimGenerator(MazeGenerator):
             if maze.grid[fy][fx] == WALL:
                 maze.grid[fy][fx] = PATH
                 maze.grid[(fy + py) // 2][(fx + px) // 2] = PATH
+                yield maze
                 
                 for dx, dy in [(0, 2), (2, 0), (0, -2), (-2, 0)]:
                     nx, ny = fx + dx, fy + dy
