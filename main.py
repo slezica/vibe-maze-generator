@@ -1,4 +1,4 @@
-# maze [-g|--generator kruskal|prim|rbt] [-s|--solve] - Generate and solve mazes using various algorithms
+# maze [-g|--generator kruskal|prim|rbt] [-s|--solve] [--width N] [--height N] - Generate and solve mazes using various algorithms
 
 import random
 import argparse
@@ -18,10 +18,12 @@ class Maze:
 
 
 class MazeGenerator:
-    def generate(self, maze):
+    def generate(self, width, height):
+        maze = Maze(width, height)
         self._add_fence(maze)
         self.generate_inner(maze, 1, 1, maze.width - 2, maze.height - 2)
         self._ensure_entrance_exit(maze)
+        return maze
     
     def generate_inner(self, maze, min_x, min_y, max_x, max_y):
         raise NotImplementedError("Subclasses must implement generate_inner method")
@@ -250,10 +252,22 @@ def main():
     parser.add_argument('-s', '--solve', 
                        action='store_true',
                        help='Show solution path')
+    parser.add_argument('--width',
+                       type=int,
+                       default=20,
+                       help='Maze width (min: 3, default: 20)')
+    parser.add_argument('--height',
+                       type=int,
+                       default=20,
+                       help='Maze height (min: 3, default: 20)')
     
     args = parser.parse_args()
     
-    maze = Maze(21, 21)
+    if args.width < 3:
+        parser.error('Width must be at least 3')
+    if args.height < 3:
+        parser.error('Height must be at least 3')
+    
     renderer = TextMazeRenderer(wall='█')
     
     if args.generator == 'kruskal':
@@ -263,7 +277,7 @@ def main():
     else:  # rbt
         generator = RecursiveBacktrackingGenerator()
     
-    generator.generate(maze)
+    maze = generator.generate(args.width, args.height)
     
     if args.solve:
         solver = MazeSolver()
