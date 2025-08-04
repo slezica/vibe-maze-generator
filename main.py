@@ -1,4 +1,8 @@
+# Maze generator, vibe coded with Claude. This is the only hand-written line.
+# maze [-g|--generator kruskal|prim|rbt] [-s|--solve] - Generate and solve mazes using various algorithms
+
 import random
+import argparse
 
 WALL = 0
 PATH = 1
@@ -239,32 +243,35 @@ class MazeSolver:
 
 
 def main():
+    parser = argparse.ArgumentParser(description='Generate and optionally solve mazes')
+    parser.add_argument('-g', '--generator', 
+                       choices=['kruskal', 'prim', 'rbt'], 
+                       default='rbt',
+                       help='Maze generation algorithm (default: rbt)')
+    parser.add_argument('-s', '--solve', 
+                       action='store_true',
+                       help='Show solution path')
+    
+    args = parser.parse_args()
+    
     maze = Maze(21, 21)
-    
-    print("Recursive Backtracking:")
-    generator = RecursiveBacktrackingGenerator()
     renderer = TextMazeRenderer(wall='█')
-    solver = MazeSolver()
+    
+    if args.generator == 'kruskal':
+        generator = KruskalGenerator()
+    elif args.generator == 'prim':
+        generator = PrimGenerator()
+    else:  # rbt
+        generator = RecursiveBacktrackingGenerator()
+    
     generator.generate(maze)
-    solved_maze = solver.solve(maze)
-    renderer.render(solved_maze)
-    print()
     
-    print("Kruskal's Algorithm:")
-    maze2 = Maze(21, 21)
-    generator2 = KruskalGenerator()
-    generator2.generate(maze2)
-    solved_maze2 = solver.solve(maze2)
-    renderer.render(solved_maze2)
-    print()
-    
-    print("Prim's Algorithm:")
-    maze3 = Maze(21, 21)
-    generator3 = PrimGenerator()
-    generator3.generate(maze3)
-    solved_maze3 = solver.solve(maze3)
-    renderer.render(solved_maze3)
-    print()
+    if args.solve:
+        solver = MazeSolver()
+        solved_maze = solver.solve(maze)
+        renderer.render(solved_maze)
+    else:
+        renderer.render(maze)
 
 
 if __name__ == "__main__":
