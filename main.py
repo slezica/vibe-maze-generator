@@ -1,4 +1,4 @@
-# maze [-g|--generator kruskal|prim|rbt] [-s|--solve] [--animate] [--width N] [--height N] - Generate and solve mazes using various algorithms
+# maze [-g|--generator kruskal|prim|rbt] [-s|--solve] [--animate] [--seed N] [--width N] [--height N] - Generate and solve mazes using various algorithms
 
 import random
 import argparse
@@ -270,6 +270,9 @@ def main():
     parser.add_argument('--animate',
                        action='store_true',
                        help='Animate maze generation (default: false)')
+    parser.add_argument('--seed',
+                       type=int,
+                       help='Random seed for reproducible mazes')
     parser.add_argument('--width',
                        type=int,
                        default=15,
@@ -285,6 +288,9 @@ def main():
         parser.error('Width must be at least 3')
     if args.height < 3:
         parser.error('Height must be at least 3')
+    
+    if args.seed is not None:
+        random.seed(args.seed)
     
     renderer = TextMazeRenderer(wall='█')
     
